@@ -38,7 +38,8 @@
 </script>
  -->
 <!-- Firebase is only to test Posting data-->
- <script src="http://cdn.firebase.com/js/client/2.2.3/firebase.js"></script>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+ <script src="../src/picoModal.js"></script>
 
 	<script type="text/javascript">
     var _lopts = _lopts || [];
@@ -59,7 +60,7 @@
     (function() {
         var loader = document.createElement('script'); loader.type = 'text/javascript'; loader.async = true;
         //loader.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + local_script;
-        loader.src = '../src/loader.min.js';
+        loader.src = '../src/loader-code.js';
         var s = document.getElementsByTagName('script')[0]; 
         s.parentNode.insertBefore(loader, s);
     })();
