@@ -281,7 +281,7 @@ A self-contained loader library
       }
     };
     addReporterrorListeners = function() {
-      var contactBtn, info, onSubmitComplete;
+      var contactBtn, info, auth, onSubmitComplete;
       onSubmitComplete = function(error) {
         var contactResponse;
         contactResponse = document.getElementById('contact-response');
@@ -313,19 +313,25 @@ A self-contained loader library
       // })(this));
       contactBtn = window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('btn-submit')
       contactBtn.addEventListener("click", function(){
-        info = {email: window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('InputEmail').value, message: window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('InputMessage').value};
-        $.ajax({
-          type: "POST",
-          url: "http://localhost:3000/api/v1/errors",
-          data: info,
-          success: function(data){
+        auth = {app_id: "bamf5Id5", app_key: "KI67hkMytEAdcFC4qOpkqw"}
+        info = {email: window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('InputEmail').value, message: window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('InputMessage').value, page_title: document.title};
+        function makeRequest(data,auth) {
+          var img = newImage(),
+              src = "http://localhost:3000/api/v1/errors/add_error" + '?error=' + encodeURIComponent(JSON.stringify(data)) + '&auth=' + encodeURIComponent(JSON.stringify(auth));
+
+          img.crossOrigin = 'anonymous';
+          img.onload = function success(data) {
             onSubmitComplete();
-          },
-          error: function(error){
+          };
+          img.onerror = img.onabort = function failure(data) {
             onSubmitComplete(error);
-          },
-          dataType: 'json'
-        });
+          };
+          img.src = src;
+        }
+        function newImage() {
+          return document.createElement('img');
+        }
+        makeRequest(info,auth);
       });
     };
     return function(options) {
