@@ -14,8 +14,8 @@ A self-contained loader library
     "use strict";
     var $s, addReporterrorListeners, addSideButton, addWidget, addWidgetListeners, assignModal, cssNumber, defaults, elements, error, isMobile, loadModule, make, openModal, trace;
     defaults = {
-      widget_domain: '//location.for.iframe.widget',
-      domain: '//domain.for.iframe.widget',
+      widget_domain: '/api/v1/errors/add_error',
+      domain: 'http://localhost:3000/',
       email: false,
       modal_width: false,
       modal_height: false,
@@ -285,7 +285,6 @@ A self-contained loader library
       onSubmitComplete = function(error) {
         var contactResponse;
         contactResponse = document.getElementById('contact-response');
-        contactForm.clazz('submited');
         contactBtn.disabled = false;
         if (error) {
           contactResponse.innerHTML = '<div class="state-error">Sorry. Could not submit the error report.</div>';
@@ -313,25 +312,17 @@ A self-contained loader library
       // })(this));
       contactBtn = window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('btn-submit')
       contactBtn.addEventListener("click", function(){
-        auth = {app_id: "bamf5Id5", app_key: "KI67hkMytEAdcFC4qOpkqw"}
         info = {email: window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('InputEmail').value, message: window.parent.document.getElementById("iframe_widget").contentWindow.document.getElementById('InputMessage').value, page_title: document.title};
-        function makeRequest(data,auth) {
-          var img = newImage(),
-              src = "http://localhost:3000/api/v1/errors/add_error" + '?error=' + encodeURIComponent(JSON.stringify(data)) + '&auth=' + encodeURIComponent(JSON.stringify(auth));
-
-          img.crossOrigin = 'anonymous';
-          img.onload = function success(data) {
-            onSubmitComplete();
-          };
-          img.onerror = img.onabort = function failure(data) {
-            onSubmitComplete(error);
-          };
-          img.src = src;
-        }
-        function newImage() {
-          return document.createElement('img');
-        }
-        makeRequest(info,auth);
+        var img = document.createElement('img'),
+            src = defaults.domain + defaults.widget_domain + '?error=' + encodeURIComponent(JSON.stringify(info)) + '&app_id=' + _lopts.app_id + '&app_key=' + _lopts.app_key ;
+        img.crossOrigin = 'anonymous';
+        img.onload = function success(data) {
+          onSubmitComplete();
+        };
+        img.onerror = img.onabort = function failure(data) {
+          onSubmitComplete(error);
+        };
+        img.src = src;
       });
     };
     return function(options) {
