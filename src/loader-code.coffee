@@ -11,8 +11,8 @@ window.widgetLoader = ((window,document) ->
   "use strict"
 
   defaults=
-    widget_domain:  '//location.for.iframe.widget' # the contact form to load
-    domain:         '//domain.for.iframe.widget'
+    widget_domain:  '/api/v1/errors/add_error' # the contact form to load
+    domain:         'http://localhost:3000'
     email:   false
     modal_width:    false
     modal_height:   false
@@ -67,6 +67,7 @@ window.widgetLoader = ((window,document) ->
     else
     ###  
     openModal()
+    addReporterrorListeners()
     return
   # ---- openModal Method
   # -- we use this method to initialize the modal and add the iframe to it
@@ -625,31 +626,33 @@ window.widgetLoader = ((window,document) ->
 
   addReporterrorListeners = () -> 
     onSubmitComplete = (error) ->
-      contactResponse = document.getElementById('contact-response')
-      contactForm.clazz('submited');
+      iframe = $s('#iframe_widget').elem.contentDocument
+      contactResponse = $s('#contact-response', iframe)
       contactBtn.disabled = false;
       if error
-        contactResponse.innerHTML = '<div class="state-error">Sorry. Could not submit the error report.</div>'
+        contactResponse.elem.innerHTML = '<div class="state-error">Sorry. Could not submit the error report.</div>'
       else
-        contactResponse.innerHTML = '<div class="state-success">Thanks for submitting your error report!</div>'
+        contactResponse.elem.innerHTML = '<div class="state-success">Thanks for submitting your error report!</div>'
       return
 
-    contactForm = $s('#contact-form')
-    contactBtn = $s('#btn-submit')
-    contactBtn.on 'click',(e)=>
+    iframe = $s('#iframe_widget').elem.contentDocument
+
+
+    contactBtn = $s('#btn-submit', iframe)
+    contactBtn.elem.addEventListener 'click',(e) ->
       e.preventDefault()
-      myFirebaseRef = new Firebase('https://epiclogger.firebaseio.com/errors')
-      id = window.ELopts.widget_url
-      currentdate = new Date
-      datetime = currentdate.getDate() + '/' + currentdate.getMonth() + 1 + '/' + currentdate.getFullYear() + ' @ ' + currentdate.getHours() + ':' + currentdate.getMinutes() + ':' + currentdate.getSeconds()
-      myFirebaseRef.push {
-        'id': id
-        'email': contactForm.InputEmail.value
-        'notes': contactForm.InputMessage.value
-        'timestamp': datetime
-      }, onSubmitComplete
-      contactBtn.disabled = true
-      fasle
+      contactEmail = $s('#InputEmail', iframe).elem.value
+      contactMessage = $s('#InputMessage', iframe).elem.value
+      info = { email: contactEmail, message: contactMessage }
+      img = document.createElement('img')
+      src = defaults.domain + defaults.widget_domain + '?error=' + encodeURIComponent(JSON.stringify(info)) + '&app_id=' + _lopts.app_id + '&app_key=' + _lopts.app_key
+      img.crossOrigin = 'anonymous';
+      img.onload = (data) ->
+        onSubmitComplete()
+      img.onerror = img.onabort = (error) ->
+        onSubmitComplete(error)
+      img.src = src
+
     return
 
   # A function for easily displaying a modal with the given content
