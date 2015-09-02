@@ -12,11 +12,31 @@ A self-contained loader library
 (function() {
   window.widgetLoader = (function(window, document) {
     "use strict";
-    var $s, addReporterrorListeners, addSideButton, addWidget, addWidgetListeners, assignModal, defaults, elements, error, host_settings, isMobile, loadModule, make, openModal, trace;
-    defaults = {};
-    host_settings = {
-      domain: '//epiclogger.com',
-      path: '/api/v1/errors/add_error'
+    var $s, addReporterrorListeners, addSideButton, addWidget, addWidgetListeners, assignModal, cssNumber, defaults, elements, error, isMobile, loadModule, make, openModal, trace;
+    defaults = {
+      widget_domain: '/api/v1/errors/add_error',
+      domain: 'http://localhost:3000',
+      email: false,
+      modal_width: false,
+      modal_height: false,
+      iframe_widget: false,
+      iframe_width: "100%",
+      iframe_height: "100%",
+      side_btn: true
+    };
+    cssNumber = {
+      "columnCount": true,
+      "fillOpacity": true,
+      "flexGrow": true,
+      "flexShrink": true,
+      "fontWeight": true,
+      "lineHeight": true,
+      "opacity": true,
+      "order": true,
+      "orphans": true,
+      "widows": true,
+      "zIndex": true,
+      "zoom": true
     };
     elements = {
       side_btn_content: '<div id="WDG_sideBtn_ctn"><a href="#" id="WDG_sideBtn">Errors Widget</a></div>',
@@ -42,6 +62,15 @@ A self-contained loader library
       var info_received;
       info_received = JSON.parse(e.data);
       window.ELopts.widget_url = info_received.url;
+
+      /*
+      window.ELopts.domain = window.ELopts.widget_domain
+      window.ELopts.domain = info_received.domain if info_received.domain!=undefined
+      
+      if isMobile()
+        window.open(window.ELopts.domain+"?id="+window.ELopts.widget_url,'_blank')
+      else
+       */
       openModal();
       addReporterrorListeners();
     };
@@ -102,7 +131,7 @@ A self-contained loader library
     };
     addWidget = function() {
       var $el, url, widget_iframe_html;
-      url = host_settings.domain + "?id=" + window.ELopts.user_id;
+      url = window.ELopts.widget_domain + "?id=" + window.ELopts.widget_url + ("&theme=" + window.ELopts.theme);
       widget_iframe_html = '<iframe id="iframe_widget" src="' + url + '" class="iframe-class" style="width:100%;height:100%;position:fixed;top:0;left:0" frameborder="0" allowtransparency="true"></iframe>';
       $el = $s(window.ELopts.widget_container);
       return $el.append(widget_iframe_html);
@@ -136,7 +165,7 @@ A self-contained loader library
           for (prop in styles) {
             if (styles.hasOwnProperty(prop)) {
               type = typeof styles[prop];
-              if (type === "number") {
+              if (type === "number" && !cssNumber[prop]) {
                 styles[prop] += "px";
               }
               elem.style[prop] = styles[prop];
@@ -276,7 +305,7 @@ A self-contained loader library
           message: contactMessage
         };
         img = document.createElement('img');
-        src = host_settings.domain + host_settings.path + '?error=' + encodeURIComponent(JSON.stringify(info)) + '&app_id=' + _lopts.app_id + '&app_key=' + _lopts.app_key;
+        src = defaults.domain + defaults.widget_domain + '?error=' + encodeURIComponent(JSON.stringify(info)) + '&app_id=' + _lopts.app_id + '&app_key=' + _lopts.app_key;
         img.crossOrigin = 'anonymous';
         img.onload = function(data) {
           return onSubmitComplete();
