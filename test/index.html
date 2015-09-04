@@ -38,17 +38,17 @@
 </script>
  -->
 <!-- Firebase is only to test Posting data-->
- <script src="http://cdn.firebase.com/js/client/2.2.3/firebase.js"></script>
+ <script src="../src/picoModal.js"></script>
 
 	<script type="text/javascript">
     var _lopts = _lopts || [];
-        _lopts.widget_domain    = "//localhost:8000/contact.html"; //the domain for where to send the data
-        _lopts.widget_url       = "1213";  //the id of the user in their application
-        _lopts.email = "rabotse@gmail.com";
-        // _lopts.theme            = "light";
+        _lopts.user_id       = "1213";  //the id of the user in their application
+        _lopts.app_id = "pv_aHCCX";
+        _lopts.app_key = "01S58sPrd-Tr843lPNS-fg";
         _lopts.modal_width      = "41%";
-        _lopts.modal_height     = 532;
-        //_lopts.widget_container = "#iframe_widget";
+//        _lopts.ignore_modal = true;
+//        _lopts.email = 'test';
+        _lopts.modal_height     = 393;
         _lopts.custom_widget    = true;
         _lopts.side_btn         = true;
         _lopts.iframe_widget    = true;
@@ -59,7 +59,7 @@
     (function() {
         var loader = document.createElement('script'); loader.type = 'text/javascript'; loader.async = true;
         //loader.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + local_script;
-        loader.src = '../src/loader.min.js';
+        loader.src = '../src/loader-code.js';
         var s = document.getElementsByTagName('script')[0]; 
         s.parentNode.insertBefore(loader, s);
     })();

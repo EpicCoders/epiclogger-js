@@ -11,8 +11,8 @@ window.widgetLoader = ((window,document) ->
   "use strict"
 
   defaults=
-    widget_domain:  '//location.for.iframe.widget' # the contact form to load
-    domain:         '//domain.for.iframe.widget'
+    path:  '/api/v1/errors/add_error' # the contact form to load
+    domain:         '//epiclogger.com'
     email:   false
     modal_width:    false
     modal_height:   false
@@ -56,17 +56,8 @@ window.widgetLoader = ((window,document) ->
   # -- depending by the browser type. This is also called by the iframe in case of displaying
   # -- a new step.
   loadModule= (e)->
-    info_received = JSON.parse(e.data)
-    window.ELopts.widget_url = info_received.url
-    ###
-    window.ELopts.domain = window.ELopts.widget_domain
-    window.ELopts.domain = info_received.domain if info_received.domain!=undefined
-
-    if isMobile()
-      window.open(window.ELopts.domain+"?id="+window.ELopts.widget_url,'_blank')
-    else
-    ###  
     openModal()
+    addReporterrorListeners()
     return
   # ---- openModal Method
   # -- we use this method to initialize the modal and add the iframe to it
@@ -194,23 +185,6 @@ window.widgetLoader = ((window,document) ->
           appearance: normal;
           -moz-appearance: none;
           -webkit-appearance: none;
-        }
-
-        /**/
-        /* textareas */
-        /**/
-        .epic-form .textarea textarea {
-          height: auto;
-          resize: none;
-        }
-        .epic-form .textarea-resizable textarea {
-          resize: vertical; 
-        }
-        .epic-form .textarea-expandable textarea {
-          height: 39px;
-        }
-        .epic-form .textarea-expandable textarea:focus {
-          height: auto;
         }
 
         /**/
@@ -356,22 +330,6 @@ window.widgetLoader = ((window,document) ->
           color: #6fb679;
         }
 
-
-        /**/
-        /* disabled state */
-        /**/
-        .epic-form .input.state-disabled input,
-        .epic-form .textarea.state-disabled,
-        .epic-form .button.state-disabled {
-          cursor: default;
-          opacity: 0.5;
-        }
-        .epic-form .input.state-disabled:hover input,
-        .epic-form .textarea.state-disabled:hover textarea {
-          border-color: #e5e5e5;
-        }
-
-
         /**/
         /* submited state */
         /**/
@@ -449,12 +407,11 @@ window.widgetLoader = ((window,document) ->
                 <input type="email" id="InputEmail" name="InputEmail" placeholder="Enter your email" value="#{emailAddress}" required/>
             </section>
           </fieldset>
-          <fieldset>          
+          <fieldset>
             <section>
-              <label class="label" for="InputMessage">Details/Notes on the Error (What were you trying to do?)</label>
-              <label class="textarea">
-                <textarea rows="4" name="InputMessage" id="InputMessage"></textarea>
-              </label>
+              <label>
+                <span>Do you wish to receive notification?</span>
+                <input type="checkbox" id="InputNotification" name="InputNotification" />
             </section>
           </fieldset>
           <div id="contact-response" class="message"></div>
@@ -477,35 +434,14 @@ window.widgetLoader = ((window,document) ->
         marginLeft: -outerWidth/2+"px"
         overflowY: "scroll"
     )
-  # ---- addSideButton Method
-  # -- we add a fixed side button that has a click event on it for opening the widget
-  addSideButton= ()->
-    $s('body').append(elements.side_btn_content)
-    moduleInfo = JSON.stringify({url:window.ELopts.widget_url})
-    $s(elements.side_btn)
-      .stylize(
-        position:"fixed"
-        top: "20%"
-        left: "0"
-        width: "90px"
-        height: "90px"
-        background: "url(https://i.imgur.com/jxoB4das.png)"
-        textIndent: "-9999px"
-        boxShadow: "2px 1px 4px #ccc"
-        borderRadius: "5px"
-      )
-    $s(elements.side_btn).on "click", (event)=> 
-      loadModule({data:moduleInfo})
-      event.preventDefault()
-    false
 
   # ---- addWidget Method
   # -- we add the iframe widget to the element specified when initializing the plugin
   addWidget= ()->
-    url = window.ELopts.widget_domain+"?id="+window.ELopts.widget_url+"&theme=#{window.ELopts.theme}"
+    url = defaults.domain + "?id="+window.ELopts.user_id
     widget_iframe_html = '<iframe id="iframe_widget" src="'+url+'" class="iframe-class" style="width:100%;height:100%;position:fixed;top:0;left:0" frameborder="0" allowtransparency="true"></iframe>'
     $el = $s(window.ELopts.widget_container)
-    $el.append(widget_iframe_html)  
+    $el.append(widget_iframe_html)
 
   # ---- isMobile Method
   # -- check if the browser is a mobile browser
@@ -623,44 +559,59 @@ window.widgetLoader = ((window,document) ->
   error = (s) ->
     window.console.error "widgetLoader: " + s  if window["console"] isnt `undefined`
 
-  addReporterrorListeners = () -> 
-    onSubmitComplete = (error) ->
-      contactResponse = document.getElementById('contact-response')
-      contactForm.clazz('submited');
-      contactBtn.disabled = false;
-      if error
-        contactResponse.innerHTML = '<div class="state-error">Sorry. Could not submit the error report.</div>'
-      else
-        contactResponse.innerHTML = '<div class="state-success">Thanks for submitting your error report!</div>'
-      return
+  onSubmitComplete = (error) ->
+    iframe = $s('#iframe_widget').elem.contentDocument
+    contactBtn = $s('#btn-submit', iframe)
+    contactResponse = $s('#contact-response', iframe)
 
-    contactForm = $s('#contact-form')
-    contactBtn = $s('#btn-submit')
-    contactBtn.on 'click',(e)=>
-      e.preventDefault()
-      myFirebaseRef = new Firebase('https://epiclogger.firebaseio.com/errors')
-      id = window.ELopts.widget_url
-      currentdate = new Date
-      datetime = currentdate.getDate() + '/' + currentdate.getMonth() + 1 + '/' + currentdate.getFullYear() + ' @ ' + currentdate.getHours() + ':' + currentdate.getMinutes() + ':' + currentdate.getSeconds()
-      myFirebaseRef.push {
-        'id': id
-        'email': contactForm.InputEmail.value
-        'notes': contactForm.InputMessage.value
-        'timestamp': datetime
-      }, onSubmitComplete
-      contactBtn.disabled = true
-      fasle
+    contactBtn.disabled = false;
+    if error
+      contactResponse.elem.innerHTML = '<div class="state-error">Sorry. Could not submit the error report.</div>'
+    else
+      contactResponse.elem.innerHTML = '<div class="state-success">Thanks for submitting your error report!</div>'
     return
+
+  addReporterrorListeners = () -> 
+    iframe = $s('#iframe_widget').elem.contentDocument
+    contactBtn = $s('#btn-submit', iframe)
+    contactBtn.elem.addEventListener 'click',(e) ->
+      e.preventDefault()
+      contactEmail = $s('#InputEmail', iframe).elem.value
+      contactNotification = $s('#InputNotification', iframe).elem.checked
+      info =
+        email: contactEmail
+        notification: contactNotification
+        url_path: window.location.href
+      submitError(info)
+    return
+
+  submitError = (infoObject) ->
+    img = document.createElement('img')
+    src = 'http:' + defaults.domain + defaults.path + '?error=' + encodeURIComponent(JSON.stringify(infoObject)) + '&app_id=' + _lopts.app_id + '&app_key=' + _lopts.app_key
+    img.crossOrigin = 'anonymous';
+    img.onload = (data) ->
+      onSubmitComplete() unless window.ELopts.ignore_modal
+    img.onerror = img.onabort = (error) ->
+      onSubmitComplete(error) unless window.ELopts.ignore_modal
+    img.src = src
+
 
   # A function for easily displaying a modal with the given content
   (options) ->
     window.ELopts = make().extend({}, defaults,options)
     trace "constructor"
-    if window.ELopts.iframe_widget
+    if not window.ELopts.ignore_modal
       addWidget()
       addWidgetListeners()
-    if window.ELopts.side_btn
-      addSideButton()
+      loadModule()
+      event.preventDefault()
+    else
+      infoObject =
+        url_path: window.location.href
+      if window.ELopts.email
+        infoObject['email'] = window.ELopts.email
+        infoObject['notification'] = true
+      submitError(infoObject)
     assignModal()
     false
 
