@@ -10,31 +10,12 @@ A self-contained loader library
 window.widgetLoader = ((window,document) ->
   "use strict"
 
-  defaults=
-    widget_domain:  '/api/v1/errors/add_error' # the contact form to load
-    domain:         'http://localhost:3000'
-    email:   false
-    modal_width:    false
-    modal_height:   false
-    iframe_widget:  false
-    iframe_width:   "100%"
-    iframe_height:  "100%"
-    side_btn:       true 
-    
+  # set default options here
+  defaults= {}
 
-  cssNumber=
-    "columnCount": true,
-    "fillOpacity": true,
-    "flexGrow": true,
-    "flexShrink": true,
-    "fontWeight": true,
-    "lineHeight": true,
-    "opacity": true,
-    "order": true,
-    "orphans": true,
-    "widows": true,
-    "zIndex": true,
-    "zoom": true
+  host_settings =
+    domain: '//epiclogger.com'
+    path:  '/api/v1/errors/add_error'
 
   elements= 
     side_btn_content:     '<div id="WDG_sideBtn_ctn"><a href="#" id="WDG_sideBtn">Errors Widget</a></div>'
@@ -58,14 +39,6 @@ window.widgetLoader = ((window,document) ->
   loadModule= (e)->
     info_received = JSON.parse(e.data)
     window.ELopts.widget_url = info_received.url
-    ###
-    window.ELopts.domain = window.ELopts.widget_domain
-    window.ELopts.domain = info_received.domain if info_received.domain!=undefined
-
-    if isMobile()
-      window.open(window.ELopts.domain+"?id="+window.ELopts.widget_url,'_blank')
-    else
-    ###  
     openModal()
     addReporterrorListeners()
     return
@@ -503,7 +476,7 @@ window.widgetLoader = ((window,document) ->
   # ---- addWidget Method
   # -- we add the iframe widget to the element specified when initializing the plugin
   addWidget= ()->
-    url = window.ELopts.widget_domain+"?id="+window.ELopts.widget_url+"&theme=#{window.ELopts.theme}"
+    url = host_settings.domain + "?id=" + window.ELopts.user_id
     widget_iframe_html = '<iframe id="iframe_widget" src="'+url+'" class="iframe-class" style="width:100%;height:100%;position:fixed;top:0;left:0" frameborder="0" allowtransparency="true"></iframe>'
     $el = $s(window.ELopts.widget_container)
     $el.append(widget_iframe_html)  
@@ -540,7 +513,7 @@ window.widgetLoader = ((window,document) ->
         for prop of styles
           if styles.hasOwnProperty(prop)
             type = typeof styles[prop]
-            if type=="number" and !cssNumber[prop]
+            if type=="number"
               styles[prop] += "px"
             elem.style[prop] = styles[prop] 
         fas
@@ -637,7 +610,6 @@ window.widgetLoader = ((window,document) ->
 
     iframe = $s('#iframe_widget').elem.contentDocument
 
-
     contactBtn = $s('#btn-submit', iframe)
     contactBtn.elem.addEventListener 'click',(e) ->
       e.preventDefault()
@@ -645,7 +617,7 @@ window.widgetLoader = ((window,document) ->
       contactMessage = $s('#InputMessage', iframe).elem.value
       info = { email: contactEmail, message: contactMessage }
       img = document.createElement('img')
-      src = defaults.domain + defaults.widget_domain + '?error=' + encodeURIComponent(JSON.stringify(info)) + '&app_id=' + _lopts.app_id + '&app_key=' + _lopts.app_key
+      src = host_settings.domain + host_settings.path + '?error=' + encodeURIComponent(JSON.stringify(info)) + '&app_id=' + _lopts.app_id + '&app_key=' + _lopts.app_key
       img.crossOrigin = 'anonymous';
       img.onload = (data) ->
         onSubmitComplete()
